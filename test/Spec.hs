@@ -22,16 +22,16 @@ runHspecUnitTests seed = hspec $ do
 
         it "setupBoard 2 2 0 creates a 2x2 grid with no mines" $ do
             setupBoard 2 2 seed 0 `shouldMatchList`
-                    [[CellInstance {hasMine = False, isClicked = False, proximity = 0},
-                      CellInstance {hasMine = False, isClicked = False, proximity = 0}],
-                     [CellInstance {hasMine = False, isClicked = False, proximity = 0},
-                      CellInstance {hasMine = False, isClicked = False, proximity = 0}]
+                    [[CellInstance {hasMine = False, isClicked = False},
+                      CellInstance {hasMine = False, isClicked = False}],
+                     [CellInstance {hasMine = False, isClicked = False},
+                      CellInstance {hasMine = False, isClicked = False}]
                     ]
 
         it "setupBoard 2 2 1 creates a 2x2 grid with mines in every cell" $ do
             setupBoard 2 2 seed 1 `shouldMatchList`
-                    [[CellInstance {hasMine = True, isClicked = False, proximity = 0},
-                      CellInstance {hasMine = True, isClicked = False, proximity = 0}],
-                     [CellInstance {hasMine = True, isClicked = False, proximity = 0},
-                      CellInstance {hasMine = True, isClicked = False, proximity = 0}]
+                    [[CellInstance {hasMine = True, isClicked = False},
+                      CellInstance {hasMine = True, isClicked = False}],
+                     [CellInstance {hasMine = True, isClicked = False},
+                      CellInstance {hasMine = True, isClicked = False}]
                     ]

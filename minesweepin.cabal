@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7276d747db68d5536a13c5f8f6dfe9f4504507265765b317822f1c6075c5a64c
+-- hash: 2e82ea71d54b0311d78957f1e61e353b23ec4f940cc1e904eb3b1c5b0eeee6a7
 
 name:           minesweepin
 version:        0.1.0.0
@@ -29,6 +29,7 @@ library
   exposed-modules:
       Lib
       Minegrid
+      UserInterface
   other-modules:
       Paths_minesweepin
   hs-source-dirs:
@@ -36,6 +37,7 @@ library
   build-depends:
       base >=4.7 && <5
     , random
+    , threepenny-gui
   default-language: Haskell2010
 
 executable minesweepin-exe
@@ -49,6 +51,7 @@ executable minesweepin-exe
       base >=4.7 && <5
     , minesweepin
     , random
+    , threepenny-gui
   default-language: Haskell2010
 
 test-suite minesweepin-test
@@ -67,4 +70,5 @@ test-suite minesweepin-test
     , hspec-expectations
     , minesweepin
     , random
+    , threepenny-gui
   default-language: Haskell2010

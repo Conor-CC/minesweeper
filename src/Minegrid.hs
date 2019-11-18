@@ -1,15 +1,14 @@
 module Minegrid (
     setupBoard,
-    Cell(CellInstance, hasMine, isClicked, proximity)
+    Cell(CellInstance, hasMine, isClicked)
 ) where
 
 import System.Random
 import Control.Monad (replicateM)
 
-data Cell = CellInstance { hasMine :: Bool,
-                   isClicked :: Bool,
-                   proximity :: Int,
-                   index :: Int
+data Cell = CellInstance {
+                   hasMine :: Bool,
+                   isClicked :: Bool
                  } deriving (Show, Eq)
 
 
@@ -17,7 +16,7 @@ data Cell = CellInstance { hasMine :: Bool,
 setupBoard :: Int -> Int -> Int -> Float -> [[Cell]]
 setupBoard 0 0 _ _ = [[]]
 setupBoard n m seed difficulty = do
-    makeBoard n m [] (createMinefield 5 5 seed difficulty)
+    makeBoard n m [] (createMinefield n m seed difficulty)
 
 makeBoard :: Int -> Int -> [[Cell]] -> [Cell] -> [[Cell]]
 makeBoard 0 _ xs mines = xs
@@ -37,5 +36,9 @@ createMinefield n m seed difficulty = do
 -- difficulty value which is between 0 and 1.
 buildMineGrid :: [Float] -> [Cell] -> Float -> [Cell]
 buildMineGrid [] ys _ = ys
-buildMineGrid (x:xs) ys difficulty | x < difficulty = buildMineGrid xs ((CellInstance True False 0 0):ys) difficulty
-                                   | x >= difficulty = buildMineGrid xs ((CellInstance False False 0 0):ys) difficulty
+buildMineGrid (x:xs) ys difficulty | x <  difficulty = buildMineGrid xs ((CellInstance True  False):ys) difficulty
+                                   | x >= difficulty = buildMineGrid xs ((CellInstance False False):ys) difficulty
+
+getElement i j xs = do
+                      let row = (xs !! i)
+                      (row !! j)
