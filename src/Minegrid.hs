@@ -1,6 +1,6 @@
 module Minegrid (
     setupBoard,
-    Cell(CellInstance, hasMine, isClicked)
+    Cell(CellInstance, hasMine, isClicked, cId)
 ) where
 
 import System.Random
@@ -8,7 +8,8 @@ import Control.Monad (replicateM)
 
 data Cell = CellInstance {
                    hasMine :: Bool,
-                   isClicked :: Bool
+                   isClicked :: Bool,
+                   cId :: Int
                  } deriving (Show, Eq)
 
 
@@ -30,15 +31,11 @@ fillRow xs (val:mines) = fillRow (val:xs) mines
 -- Generates T/F values in an list that maps to all cells in the board
 createMinefield n m seed difficulty = do
   let size = n * m
-  (buildMineGrid (take size (randoms (mkStdGen seed) :: [Float])) [] difficulty)
+  buildMineGrid (take size (randoms (mkStdGen seed) :: [Float])) [] difficulty 0
 
 -- Generates mines as True and no mine as False. Amount of Mines depends on
 -- difficulty value which is between 0 and 1.
-buildMineGrid :: [Float] -> [Cell] -> Float -> [Cell]
-buildMineGrid [] ys _ = ys
-buildMineGrid (x:xs) ys difficulty | x <  difficulty = buildMineGrid xs ((CellInstance True  False):ys) difficulty
-                                   | x >= difficulty = buildMineGrid xs ((CellInstance False False):ys) difficulty
-
-getElement i j xs = do
-                      let row = (xs !! i)
-                      (row !! j)
+buildMineGrid :: [Float] -> [Cell] -> Float -> Int -> [Cell]
+buildMineGrid [] ys _ _ = ys
+buildMineGrid (x:xs) ys difficulty n | x <  difficulty = buildMineGrid xs ((CellInstance True  False n):ys) difficulty (n + 1)
+                                       | x >= difficulty = buildMineGrid xs ((CellInstance False False n):ys) difficulty (n + 1)
