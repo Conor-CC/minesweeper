@@ -38,4 +38,4 @@ createMinefield n m seed difficulty = do
 buildMineGrid :: [Float] -> [Cell] -> Float -> Int -> [Cell]
 buildMineGrid [] ys _ _ = ys
 buildMineGrid (x:xs) ys difficulty n | x <  difficulty = buildMineGrid xs ((CellInstance True  False n):ys) difficulty (n + 1)
-                                       | x >= difficulty = buildMineGrid xs ((CellInstance False False n):ys) difficulty (n + 1)
+                                     | x >= difficulty = buildMineGrid xs ((CellInstance False False n):ys) difficulty (n + 1)

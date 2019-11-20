@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2e82ea71d54b0311d78957f1e61e353b23ec4f940cc1e904eb3b1c5b0eeee6a7
+-- hash: 34d60bd33d63d5091aee98d67730430b88ef52e27eec812440a838b96ce852be
 
 name:           minesweepin
 version:        0.1.0.0
@@ -29,6 +29,7 @@ library
   exposed-modules:
       Lib
       Minegrid
+      UIUtilities
       UserInterface
   other-modules:
       Paths_minesweepin

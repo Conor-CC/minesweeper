@@ -1,36 +1,13 @@
-module UserInterface
+module UIUtilities
     (
-      setup
+      generateGrid
     ) where
 
 import qualified Graphics.UI.Threepenny as UI
-import Graphics.UI.Threepenny.Core as Core
+import Graphics.UI.Threepenny.Core
 import Minegrid (Cell(CellInstance, hasMine, isClicked, cId))
 import Data.List (elemIndex)
-
-setup :: [[Cell]] -> Window -> UI ()
-setup board window = do
-        grid <- (getElementsByClassName window ("board"))
-        msg <- (getElementsByClassName window ("lost_message"))
-        btn <- (getElementsByClassName window ("reset_btn"))
-        if (length grid > 0 && length msg > 0 && length btn > 0)
-          then do
-            deleteGrid (head grid)
-            deleteGrid (head msg)
-            deleteGrid (head btn)
-          else return ()
-        return window # set title "Minesweepin Paddys"
-        let rows = createGrid board window
-        getBody window #+ rows
-        return ()
-
-deleteGrid grid = do
-        delete grid
-
-createGrid b w = do
-  rows <- [grid (generateGrid b [[]] b w) # set (attr "class") ("board")]
-  return rows
-
+import System.Exit
 
 -- generateGrid and generateRow create a frontend representation of [[Cell]]
 generateGrid [] ys b w = ys
@@ -53,18 +30,14 @@ makeButton cell board w = do
                             # set (attr "cId") (show cellId)
                             # set style [("color", "#000000")]
                             # set (attr "oncontextmenu") ("return false;")
-                            # set (attr "class") ("cell")
-
 
         -- Define events and their responses  based on cell type and state
         case (mine) of
             True -> (on UI.click button $ \_ -> do
                     element button # set text "M"
                                    # set style [("color", "#000000"), ("background-color", "#f44336")]
-                    getBody w #+ [UI.h1 #+ [string "YOU LOST"] # set (attr "class") ("lost_message")]
-                    reset <- UI.button # set text "Reset?" # set (attr "class") ("reset_btn")
-                    on UI.click reset $ \_ -> do
-                              setup board w
+                    getBody w #+ [UI.h1 #+ [string "YOU LOST"]]
+                    reset <- UI.button # set text "Reset?"
                     getBody w #+ [element reset])
             False -> (on UI.click button $ \_ -> do
                     let proximity = genProximity board matchingCell -- Find current position, see if neighbours have mines
@@ -78,7 +51,6 @@ makeButton cell board w = do
                 element button # set style [("color", "#000000")]
 
         return button
-
 
 --Finds position of the clicked non-mine cell, count how many mines are nearby
 genProximity board cell = mineNeighbours (iter board cell ((length board) - 1)) board
