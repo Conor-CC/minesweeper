@@ -1,11 +1,12 @@
 module Main where
 
-import Lib
-import Minegrid
-import UserInterface
-import System.CPUTime (getCPUTime)
-import qualified Graphics.UI.Threepenny as UI
-import Graphics.UI.Threepenny.Core
+import qualified Graphics.UI.Threepenny        as UI
+import           Graphics.UI.Threepenny.Core
+import           Graphics.UI.Threepenny.JQuery
+import           Lib
+import           Minegrid
+import           System.CPUTime                (getCPUTime)
+import           UserInterface
 
 main :: IO ()
 main = do
@@ -16,5 +17,6 @@ main = do
     m <- getLine
     difficulty <- getLine
     let board = setupBoard (read n :: Int) (read m :: Int) seed (read difficulty :: Float)
+    print board
     startGUI defaultConfig (setup board)
     return ()

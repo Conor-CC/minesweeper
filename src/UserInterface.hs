@@ -3,14 +3,16 @@ module UserInterface
       setup
     ) where
 
+{-# LANGUAGE ForeignFunctionInterface #-}
+
+
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core as Core
-import Minegrid (Cell(CellInstance, hasMine, isClicked, cId))
-import Data.List (elemIndex)
+import Minegrid
 
 setup :: [[Cell]] -> Window -> UI ()
 setup board window = do
-        grid <- (getElementsByClassName window ("board"))
+        grid <- (getElementsByClassName window ("board_active"))
         msg <- (getElementsByClassName window ("lost_message"))
         btn <- (getElementsByClassName window ("reset_btn"))
         if (length grid > 0 && length msg > 0 && length btn > 0)
@@ -20,15 +22,38 @@ setup board window = do
             deleteGrid (head btn)
           else return ()
         return window # set title "Minesweepin Paddys"
-        let rows = createGrid board window
-        getBody window #+ rows
+        let originalRows = createGrid board window
+        getBody window #+ originalRows
         return ()
+
+runGame :: [[Cell]] -> Window -> UI ()
+runGame newBoard window = do
+          grid <- (getElementsByClassName window ("board_nonactive"))
+          if (length grid > 0)
+              then do
+                  deleteGrid (head grid)
+              else return ()
+          active <- (getElementsByClassName window ("board_active"))
+          if (length active > 0)
+              then do
+                  deleteGrid (head active)
+              else return ()
+          return window # set title "Minesweepin Paddys"
+          let rows = createGameRunningGrid newBoard window
+          getBody window #+ rows
+          return ()
 
 deleteGrid grid = do
         delete grid
 
 createGrid b w = do
-  rows <- [grid (generateGrid b [[]] b w) # set (attr "class") ("board")]
+  rows <- [grid (generateGrid b [[]] b w) # set (attr "class") ("board_nonactive")
+                                          # set (attr "value") ("noclick")]
+  return rows
+
+createGameRunningGrid b w = do
+  rows <- [grid (generateGrid b [[]] b w) # set (attr "class") ("board_active")
+                                          # set (attr "value") ("noclick")]
   return rows
 
 
@@ -43,32 +68,65 @@ generateRow (x:xs) ys b w = generateRow xs ((makeButton x b w):ys) b w
 -- Creates a button to be used in the browser minesweeper game board
 makeButton :: Cell -> [[Cell]] -> Window -> UI Element
 makeButton cell board w = do
+        activeGameList <- getElementsByClassName w "board_active"
         -- Assign variables concerned with relevant cell
         let matchingCell = cell
         let mine = hasMine matchingCell
         let cellId = cId matchingCell
+        let clicked = isClicked matchingCell
+        let activeGame = do
+                    if (length activeGameList >= 0)
+                      then True
+                      else False
+        let prox = proximity matchingCell
+        let proxString = do
+                    if (clicked == True)
+                      then (show prox)
+                      else "?"
+        let color = do
+                    if (proxString /= "?")
+                      then "#00FFFF"
+                      else "A9A9A9"
 
         -- Define baseline cell attributes
-        button <- UI.button # set text "?"
-                            # set (attr "cId") (show cellId)
-                            # set style [("color", "#000000")]
+        button <- UI.button # set text proxString
+                            # set value proxString
+                            # set (attr "id") (show cellId)
                             # set (attr "oncontextmenu") ("return false;")
                             # set (attr "class") ("cell")
+                            # set (attr "style") (("background-color:" ++ color ++ ";"))
 
 
-        -- Define events and their responses  based on cell type and state
-        case (mine) of
-            True -> (on UI.click button $ \_ -> do
-                    element button # set text "M"
-                                   # set style [("color", "#000000"), ("background-color", "#f44336")]
-                    getBody w #+ [UI.h1 #+ [string "YOU LOST"] # set (attr "class") ("lost_message")]
-                    reset <- UI.button # set text "Reset?" # set (attr "class") ("reset_btn")
-                    on UI.click reset $ \_ -> do
-                              setup board w
-                    getBody w #+ [element reset])
-            False -> (on UI.click button $ \_ -> do
-                    let proximity = genProximity board matchingCell -- Find current position, see if neighbours have mines
-                    element button # set text (show proximity))
+
+        on UI.click button $ \_ -> do
+                active <- getElementsByClassName w "board_active"
+                if (length active <= 0)
+                  then do
+                      let newBoard = forceClearById board matchingCell
+                      runGame newBoard w
+                      runFunction $ generateClick cellId
+                      liftIO $ print "New Game Started!!"
+                      -- liftIO $ print newBoard
+                    -- Get the neighbours, if any of them are marked as mines,
+                    -- Override the larry.
+                  else do
+                      case mine of
+                        True -> do
+                          element button # set text "M"
+                                         # set (attr "value") "M"
+                                         # set (attr "style") (("background-color:#DC143C;"))
+                          getBody w #+ [UI.h1 #+ [string "YOU LOST"] # set (attr "class") ("lost_message")]
+                          reset <- UI.button # set text "Reset?" # set (attr "class") ("reset_btn")
+                          getBody w #+ [element reset]
+                          on UI.click reset $ \_ -> do
+                                     setup board w
+                        False -> do
+                          element button # set text proxString
+                                         # set (attr "style") (("background-color:#00FFFF;"))
+                          let new = updateAndCheckWin board matchingCell
+                          runGame new w
+                          liftIO $ print $  "Board Redraw"
+
 
         on UI.contextmenu button $ \_ -> do
                 element button # set text "F"
@@ -80,50 +138,5 @@ makeButton cell board w = do
         return button
 
 
---Finds position of the clicked non-mine cell, count how many mines are nearby
-genProximity board cell = mineNeighbours (iter board cell ((length board) - 1)) board
-
-
-mineNeighbours :: (Int, Int) -> [[Cell]] -> Int
-mineNeighbours (x, y) board = do
-                            -- Top Row
-                            let a = getCell (x - 1) (y - 1) board (length board)
-                            let b = getCell (x - 1) (y) board (length board)
-                            let c = getCell (x - 1) (y + 1) board (length board)
-                            -- Left and Right
-                            let d = getCell (x) (y - 1) board (length board)
-                            let e = getCell (x) (y + 1) board (length board)
-                            -- Bottom Row
-                            let f = getCell (x + 1) (y - 1) board (length board)
-                            let g = getCell (x + 1) (y) board (length board)
-                            let h = getCell (x + 1) (y + 1) board (length board)
-                            -- Count how many mines present
-                            countMines (h:(g:(f:(e:(d:(c:(b:(a:[]))))))))
-
--- Returns the position of the clicked mine
-findPos :: [[Cell]] -> Cell -> (Int, Int)
-findPos board cell = iter board cell ((length board) - 1)
-
--- Finds mine in backend board that matches with clicked mine.
--- Unique identifier cId in the CellInstance constructor makes
--- this easier.
-iter :: [[Cell]] -> Cell -> Int -> (Int, Int)
-iter [] _ n = (n, -1)
-iter (x:xs) mup n = case (elemIndex mup x) of
-                  Just a -> (n, (((length x) - a) - 1))
-                  Nothing -> iter xs mup (n - 1)
-
--- If hasMine == True, increase count by one. Otherwise by 0
-countMines :: [Cell] -> Int
-countMines [] = 0
-countMines (x:xs) | (hasMine x) == True = (1 + (countMines xs))
-                  | (hasMine x) == False = (0 + (countMines xs))
-
--- Get cell based on i j coordinates from the backend board.
--- If index out of bounds returns a cell with cID=-1 and hasMine = False
-getCell :: Int -> Int -> [[Cell]] -> Int -> Cell
-getCell i j xs lim | ((i > ((length xs) - 1)) || (j > (lim - 1))) = (CellInstance False False (-1))
-getCell i j xs lim | ((i < 0) || (j < 0)) = (CellInstance False False (-1))
-getCell i j xs lim = do
-                let row = (xs !! ((lim - 1) - i))
-                (row !! (((length row) - 1) - j))
+generateClick :: Int -> JSFunction ()
+generateClick = ffi "var cell = document.getElementById(%1); if (cell.value === '?') {cell.dispatchEvent(new Event('click'));}"
