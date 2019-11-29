@@ -1,10 +1,10 @@
 name:                minesweepin
 version:             0.1.0.0
-github:              "githubuser/minesweepin"
+github:              "ConorClery/minesweeper"
 license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2019 Author name here"
+author:              "Conor"
+maintainer:          "cleryc@tcd.ie"
+copyright:           "2019 Conor Clery Productions Ltd."
 
 extra-source-files:
 - README.md
